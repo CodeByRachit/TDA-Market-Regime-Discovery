@@ -70,9 +70,11 @@ When you run the historical backtesting and high-frequency PoC scripts, the engi
    - **Topological Early Warning Signal (Bottom)**: Shows the $L_1$ norm of the $1$-dimensional persistence landscape spiking dynamically during the COVID-19 crash.
    - **Dynamic Asset Allocation (Middle)**: The Random Forest perfectly translates this topological spike into a defensive maneuver, actively dropping equity exposure from 100% to 20%.
    - **Strategy Wealth (Top)**: Proves that dodging the structural crash geometrically prevents massive drawdowns and significantly outperforms a static benchmark.
+<img width="1400" height="1200" alt="image" src="https://github.com/user-attachments/assets/8c1fb271-f914-4092-bfd4-7e6ec26ae009" />
 
 2. **High-Frequency Market Microstructure (`hft_poc_results.png`)**
    - Shows the engine running on 1-minute intraday tick/candle data with an adaptive noise filtering threshold (`epsilon=0.0`). The topological fragmentation index isolates microscopic order book imbalances and transient liquidity vacuums milliseconds before violent price drops.
+<img width="1400" height="600" alt="image" src="https://github.com/user-attachments/assets/909eaed8-24c5-43df-b9aa-97319219692e" />
 
 ## Key Technical Features
 
