@@ -1,0 +1,371 @@
+Help on class PersistenceImage in module gtda.diagrams.representations:
+
+class PersistenceImage(sklearn.base.BaseEstimator, sklearn.base.TransformerMixin, gtda.base.PlotterMixin)
+ |  PersistenceImage(sigma=0.1, n_bins=100, weight_function=None, n_jobs=None)
+ |  
+ |  :ref:`Persistence images <TODO>` of persistence
+ |  diagrams.
+ |  
+ |  Based on ideas in [1]_. Given a persistence diagram consisting of
+ |  birth-death-dimension triples [b, d, q], the equivalent diagrams of
+ |  birth-persistence-dimension [b, d-b, q] triples are computed and
+ |  subdiagrams corresponding to distinct homology dimensions are considered
+ |  separately and regarded as sums of Dirac deltas. Then, the convolution
+ |  with a Gaussian kernel is computed over a rectangular grid of locations
+ |  evenly sampled from appropriate ranges of the :ref:`filtration parameter
+ |  <filtered_complex>`. The result can be thought of as a (multi-channel)
+ |  raster image.
+ |  
+ |  **Important note**:
+ |  
+ |      - Input collections of persistence diagrams for this transformer must
+ |        satisfy certain requirements, see e.g. :meth:`fit`.
+ |  
+ |  Parameters
+ |  ----------
+ |  sigma : float, optional default ``0.1``
+ |      Standard deviation for Gaussian kernel.
+ |  
+ |  n_bins : int, optional, default: ``100``
+ |      The number of filtration parameter values, per available homology
+ |      dimension, to sample during :meth:`fit`.
+ |  
+ |  weight_function : callable or None, default: ``None``
+ |      Function mapping the 1D array of sampled persistence values (see
+ |      :attr:`samplings_`) to a 1D array of weights. ``None`` is equivalent to
+ |      passing ``numpy.ones_like``. More weight can be given to regions of
+ |      high persistence by passing a monotonic function, e.g. the identity.
+ |  
+ |  n_jobs : int or None, optional, default: ``None``
+ |      The number of jobs to use for the computation. ``None`` means 1 unless
+ |      in a :obj:`joblib.parallel_backend` context. ``-1`` means using all
+ |      processors.
+ |  
+ |  Attributes
+ |  ----------
+ |  effective_weight_function_ : callable
+ |      Effective function corresponding to `weight_function`. Set in
+ |      :meth:`fit`.
+ |  
+ |  homology_dimensions_ : tuple
+ |      Homology dimensions seen in :meth:`fit`.
+ |  
+ |  samplings_ : dict
+ |      For each dimension in `homology_dimensions_`, a discrete sampling of
+ |      birth parameters and one of persistence values, calculated during
+ |      :meth:`fit` according to the minimum birth and maximum death values
+ |      observed across all samples.
+ |  
+ |  weights_ : dict
+ |      For each number in `homology_dimensions_`, an array of weights
+ |      corresponding to the persistence values obtained from `samplings_`
+ |      calculated during :meth:`fit` using the `weight_function`.
+ |  
+ |  See also
+ |  --------
+ |  BettiCurve, PersistenceLandscape, PersistenceEntropy, HeatKernel,     Amplitude, PairwiseDistance, gtda.homology.VietorisRipsPersistence
+ |  
+ |  Notes
+ |  -----
+ |  The samplings in :attr:`samplings_` are in general different between
+ |  different homology dimensions. This means that the (i, j)-th pixel of a
+ |  persistence image in homology dimension q typically arises from a different
+ |  pair of parameter values to the (i, j)-th pixel of a persistence image in
+ |  dimension q'.
+ |  
+ |  References
+ |  ----------
+ |  .. [1] H. Adams, T. Emerson, M. Kirby, R. Neville, C. Peterson, P. Shipman,
+ |         S. Chepushtanova, E. Hanson, F. Motta, and L. Ziegelmeier,
+ |         "Persistence Images: A Stable Vector Representation of Persistent
+ |         Homology"; *Journal of Machine Learning Research 18, 1*,
+ |         pp. 218-252, 2017; `DOI: 10.5555/3122009.3122017
+ |         <http://dx.doi.org/10.5555/3122009.3122017>`_.
+ |  
+ |  Method resolution order:
+ |      PersistenceImage
+ |      sklearn.base.BaseEstimator
+ |      sklearn.utils._metadata_requests._MetadataRequester
+ |      sklearn.base.TransformerMixin
+ |      sklearn.utils._set_output._SetOutputMixin
+ |      gtda.base.PlotterMixin
+ |      builtins.object
+ |  
+ |  Methods defined here:
+ |  
+ |  __init__(self, sigma=0.1, n_bins=100, weight_function=None, n_jobs=None)
+ |      Initialize self.  See help(type(self)) for accurate signature.
+ |  
+ |  fit(self, X, y=None)
+ |      Store all observed homology dimensions in
+ |      :attr:`homology_dimensions_` and, for each dimension separately,
+ |      store evenly sample filtration parameter values in :attr:`samplings_`.
+ |      Then, return the estimator.
+ |      
+ |      This method is here to implement the usual scikit-learn API and hence
+ |      work in pipelines.
+ |      
+ |      Parameters
+ |      ----------
+ |      X : ndarray of shape (n_samples, n_features, 3)
+ |          Input data. Array of persistence diagrams, each a collection of
+ |          triples [b, d, q] representing persistent topological features
+ |          through their birth (b), death (d) and homology dimension (q).
+ |          It is important that, for each possible homology dimension, the
+ |          number of triples for which q equals that homology dimension is
+ |          constants across the entries of X.
+ |      
+ |      y : None
+ |          There is no need for a target in a transformer, yet the pipeline
+ |          API requires this parameter.
+ |      
+ |      Returns
+ |      -------
+ |      self : object
+ |  
+ |  fit_transform(self, X, y=None, **fit_params) from sklearn.base.TransformerMixin
+ |      Fit to data, then transform it.
+ |      
+ |      Fits transformer to ``X`` and ``y`` with optional parameters ``fit_params``
+ |      and returns a transformed version of ``X``.
+ |      
+ |      Parameters
+ |      ----------
+ |      X : ndarray of shape (n_samples, n_features, 3)
+ |          Input data. Array of persistence diagrams, each a collection of
+ |          triples [b, d, q] representing persistent topological features
+ |          through their birth (b), death (d) and homology dimension (q).
+ |          It is important that, for each possible homology dimension, the
+ |          number of triples for which q equals that homology dimension is
+ |          constants across the entries of X.
+ |      
+ |      y : None
+ |          There is no need for a target in a transformer, yet the pipeline
+ |          API requires this parameter.
+ |      
+ |      Returns
+ |      -------
+ |      Xt : ndarray of shape (n_samples, n_homology_dimensions, n_bins,             n_bins)
+ |          Multi-channel raster images: one image per sample and one channel
+ |          per homology dimension seen in :meth:`fit`. Index i along axis 1
+ |          corresponds to the i-th homology dimension in
+ |          :attr:`homology_dimensions_`.
+ |  
+ |  plot(self, Xt, sample=0, homology_dimension_idx=0, colorscale='blues', plotly_params=None)
+ |      Plot a single channel -– corresponding to a given homology
+ |      dimension -– in a sample from a collection of persistence images.
+ |      
+ |      Parameters
+ |      ----------
+ |      Xt : ndarray of shape (n_samples, n_homology_dimensions, n_bins,             n_bins)
+ |          Collection of multi-channel raster images, such as returned by
+ |          :meth:`transform`.
+ |      
+ |      sample : int, optional, default: ``0``
+ |          Index of the sample in `Xt` to be selected.
+ |      
+ |      homology_dimension_idx : int, optional, default: ``0``
+ |          Index of the channel in the selected sample to be plotted. If `Xt`
+ |          is the result of a call to :meth:`transform` and this index is i,
+ |          the plot corresponds to the homology dimension given by the i-th
+ |          entry in :attr:`homology_dimensions_`.
+ |      
+ |      colorscale : str, optional, default: ``"blues"``
+ |          Color scale to be used in the heat map. Can be anything allowed by
+ |          :class:`plotly.graph_objects.Heatmap`.
+ |      
+ |      plotly_params : dict or None, optional, default: ``None``
+ |          Custom parameters to configure the plotly figure. Allowed keys are
+ |          ``"trace"`` and ``"layout"``, and the corresponding values should
+ |          be dictionaries containing keyword arguments as would be fed to the
+ |          :meth:`update_traces` and :meth:`update_layout` methods of
+ |          :class:`plotly.graph_objects.Figure`.
+ |      
+ |      Returns
+ |      -------
+ |      fig : :class:`plotly.graph_objects.Figure` object
+ |          Plotly figure.
+ |  
+ |  transform(self, X, y=None)
+ |      Compute multi-channel raster images from diagrams in `X` by
+ |      convolution with a Gaussian kernel.
+ |      
+ |      Parameters
+ |      ----------
+ |      X : ndarray of shape (n_samples, n_features, 3)
+ |          Input data. Array of persistence diagrams, each a collection of
+ |          triples [b, d, q] representing persistent topological features
+ |          through their birth (b), death (d) and homology dimension (q).
+ |          It is important that, for each possible homology dimension, the
+ |          number of triples for which q equals that homology dimension is
+ |          constants across the entries of X.
+ |      
+ |      y : None
+ |          There is no need for a target in a transformer, yet the pipeline
+ |          API requires this parameter.
+ |      
+ |      Returns
+ |      -------
+ |      Xt : ndarray of shape (n_samples, n_homology_dimensions, n_bins,             n_bins)
+ |          Multi-channel raster images: one image per sample and one channel
+ |          per homology dimension seen in :meth:`fit`. Index i along axis 1
+ |          corresponds to the i-th homology dimension in
+ |          :attr:`homology_dimensions_`.
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from sklearn.base.BaseEstimator:
+ |  
+ |  __getstate__(self)
+ |      Helper for pickle.
+ |  
+ |  __repr__(self, N_CHAR_MAX=700)
+ |      Return repr(self).
+ |  
+ |  __setstate__(self, state)
+ |  
+ |  __sklearn_clone__(self)
+ |  
+ |  get_params(self, deep=True)
+ |      Get parameters for this estimator.
+ |      
+ |      Parameters
+ |      ----------
+ |      deep : bool, default=True
+ |          If True, will return the parameters for this estimator and
+ |          contained subobjects that are estimators.
+ |      
+ |      Returns
+ |      -------
+ |      params : dict
+ |          Parameter names mapped to their values.
+ |  
+ |  set_params(self, **params)
+ |      Set the parameters of this estimator.
+ |      
+ |      The method works on simple estimators as well as on nested objects
+ |      (such as :class:`~sklearn.pipeline.Pipeline`). The latter have
+ |      parameters of the form ``<component>__<parameter>`` so that it's
+ |      possible to update each component of a nested object.
+ |      
+ |      Parameters
+ |      ----------
+ |      **params : dict
+ |          Estimator parameters.
+ |      
+ |      Returns
+ |      -------
+ |      self : estimator instance
+ |          Estimator instance.
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from sklearn.utils._metadata_requests._MetadataRequester:
+ |  
+ |  get_metadata_routing(self)
+ |      Get metadata routing of this object.
+ |      
+ |      Please check :ref:`User Guide <metadata_routing>` on how the routing
+ |      mechanism works.
+ |      
+ |      Returns
+ |      -------
+ |      routing : MetadataRequest
+ |          A :class:`~sklearn.utils.metadata_routing.MetadataRequest` encapsulating
+ |          routing information.
+ |  
+ |  ----------------------------------------------------------------------
+ |  Class methods inherited from sklearn.utils._metadata_requests._MetadataRequester:
+ |  
+ |  __init_subclass__(**kwargs)
+ |      Set the ``set_{method}_request`` methods.
+ |      
+ |      This uses PEP-487 [1]_ to set the ``set_{method}_request`` methods. It
+ |      looks for the information available in the set default values which are
+ |      set using ``__metadata_request__*`` class attributes, or inferred
+ |      from method signatures.
+ |      
+ |      The ``__metadata_request__*`` class attributes are used when a method
+ |      does not explicitly accept a metadata through its arguments or if the
+ |      developer would like to specify a request value for those metadata
+ |      which are different from the default ``None``.
+ |      
+ |      References
+ |      ----------
+ |      .. [1] https://www.python.org/dev/peps/pep-0487
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors inherited from sklearn.utils._metadata_requests._MetadataRequester:
+ |  
+ |  __dict__
+ |      dictionary for instance variables
+ |  
+ |  __weakref__
+ |      list of weak references to the object
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from sklearn.utils._set_output._SetOutputMixin:
+ |  
+ |  set_output(self, *, transform=None)
+ |      Set output container.
+ |      
+ |      See :ref:`sphx_glr_auto_examples_miscellaneous_plot_set_output.py`
+ |      for an example on how to use the API.
+ |      
+ |      Parameters
+ |      ----------
+ |      transform : {"default", "pandas"}, default=None
+ |          Configure output of `transform` and `fit_transform`.
+ |      
+ |          - `"default"`: Default output format of a transformer
+ |          - `"pandas"`: DataFrame output
+ |          - `None`: Transform configuration is unchanged
+ |      
+ |      Returns
+ |      -------
+ |      self : estimator instance
+ |          Estimator instance.
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from gtda.base.PlotterMixin:
+ |  
+ |  fit_transform_plot(self, X, y=None, sample=0, **plot_params)
+ |      Fit to data, then apply :meth:`transform_plot`.
+ |      
+ |      Parameters
+ |      ----------
+ |      X : ndarray of shape (n_samples, ...)
+ |          Input data.
+ |      
+ |      y : ndarray of shape (n_samples,) or None
+ |          Target values for supervised problems.
+ |      
+ |      sample : int
+ |          Sample to be plotted.
+ |      
+ |      **plot_params
+ |          Optional plotting parameters.
+ |      
+ |      Returns
+ |      -------
+ |      Xt : ndarray of shape (1, ...)
+ |          Transformed one-sample slice from the input.
+ |  
+ |  transform_plot(self, X, sample=0, **plot_params)
+ |      Take a one-sample slice from the input collection and transform it.
+ |      Before returning the transformed object, plot the transformed sample.
+ |      
+ |      Parameters
+ |      ----------
+ |      X : ndarray of shape (n_samples, ...)
+ |          Input data.
+ |      
+ |      sample : int
+ |          Sample to be plotted.
+ |      
+ |      **plot_params
+ |          Optional plotting parameters.
+ |      
+ |      Returns
+ |      -------
+ |      Xt : ndarray of shape (1, ...)
+ |          Transformed one-sample slice from the input.
+
